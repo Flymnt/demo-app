@@ -1,0 +1,25 @@
+name: Rollback demo-app
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: 'Service to rollback (frontend/service-a/service-b)'
+        required: true
+        default: 'frontend'
+      env:
+        description: 'Environment (dev/stage/prod)'
+        required: true
+        default: 'dev'
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Echo rollback info
+        run: |
+          echo "Rolling back service ${{ github.event.inputs.service }} in env ${{ github.event.inputs.env }}."
+          echo "Hook this job up to your actual rollback mechanism (e.g., kubectl rollout undo)."
