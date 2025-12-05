@@ -1,0 +1,30 @@
+name: Deploy demo-app
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Go build
+        run: go build ./...
+
+      - name: Go test
+        run: go test ./...
+
+      - name: Deploy placeholder
+        run: |
+          echo "This is a placeholder deploy step."
+          echo "Integrate with EKS or Helm here if needed."
