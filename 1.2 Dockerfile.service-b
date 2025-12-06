@@ -1,0 +1,12 @@
+FROM golang:1.21 AS builder
+WORKDIR /app
+
+COPY . .
+
+RUN go build -o service-b ./app/service-b
+
+FROM gcr.io/distroless/base
+COPY --from=builder /app/service-b /service-b
+
+EXPOSE 8082
+ENTRYPOINT ["/service-b"]
