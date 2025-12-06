@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ghcr.io/Flymnt/demo-app-frontend:latest # TODO update later
+          image: ghcr.io/flymnt/demo-app-frontend:latest # TODO update later
           ports:
             - containerPort: 8080
           readinessProbe:
