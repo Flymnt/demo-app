@@ -1,0 +1,15 @@
+FROM golang:1.21 AS builder
+WORKDIR /app
+
+# Copy entire repo (small demo, fine for now)
+COPY . .
+
+# Build service-a binary
+RUN go build -o service-a ./app/service-a
+
+# Minimal runtime image
+FROM gcr.io/distroless/base
+COPY --from=builder /app/service-a /service-a
+
+EXPOSE 8081
+ENTRYPOINT ["/service-a"]
