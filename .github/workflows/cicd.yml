@@ -44,7 +44,7 @@ jobs:
           context: .
           file: ./Dockerfile.service-a
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/demo-app-service-a:latest
+          tags: ghcr.io/flymnt/demo-app-service-a:latest
 
       - name: Build and push service-b image
         uses: docker/build-push-action@v5
@@ -52,7 +52,7 @@ jobs:
           context: .
           file: ./Dockerfile.service-b
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/demo-app-service-b:latest
+          tags: ghcr.io/flymnt/demo-app-service-b:latest
 
       - name: Build and push frontend image
         uses: docker/build-push-action@v5
@@ -60,7 +60,7 @@ jobs:
           context: .
           file: ./Dockerfile.frontend
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/demo-app-frontend:latest
+          tags: ghcr.io/flymnt/demo-app-frontend:latest
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
