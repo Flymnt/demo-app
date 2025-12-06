@@ -1,33 +1,36 @@
-name: Provision AN EC2 Instance
+name: Provision an EC2 Instance
 
 on:
   workflow_dispatch:
     inputs:
       ec2_name:
-        description: EC2 name
+        description: "EC2 name"
         required: true
-        default: 'App Server'
+        default: "App Server"
         type: string
       ec2_instance_type:
-        description: EC2 instance type
+        description: "EC2 instance type"
         required: false
         default: "t3.micro"
         type: string
       pem_key_name:
-        description: EC2 pem key
+        description: "EC2 pem key"
         required: true
         type: string
       port_context:
         required: true
-        description: includes blueprint, run ID, and entity identifier from Port.
+        description: "Includes blueprint, run ID, and entity identifier from Port."
+        type: string
+
 jobs:
   provision-ec2:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v3
         with:
-          node-version: '14'
+          node-version: "14"
 
       - name: Log starting of EC2 Instance creation
         uses: port-labs/port-github-action@v1
@@ -37,14 +40,14 @@ jobs:
           operation: PATCH_RUN
           runId: ${{ fromJson(inputs.port_context).run_id }}
           logMessage: |
-              About to create ec2 instance ${{ github.event.inputs.ec2_name }} .. ⛴️
+            About to create ec2 instance ${{ github.event.inputs.ec2_name }} .. ⛴️
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: '${{ secrets.TF_USER_AWS_KEY }}'
-          aws-secret-access-key: '${{ secrets.TF_USER_AWS_SECRET }}'
-          aws-region: '${{ secrets.TF_USER_AWS_REGION }}'
+          aws-access-key-id: ${{ secrets.TF_USER_AWS_KEY }}
+          aws-secret-access-key: ${{ secrets.TF_USER_AWS_SECRET }}
+          aws-region: ${{ secrets.TF_USER_AWS_REGION }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
@@ -52,12 +55,12 @@ jobs:
           terraform_wrapper: false
 
       - name: Terraform Apply
-        id:   apply
+        id: apply
         env:
-          TF_VAR_ec2_name:  "${{ github.event.inputs.ec2_name }}"
-          TF_VAR_pem_key_name: "${{ github.event.inputs.pem_key_name}}"
-          TF_VAR_aws_region: "${{ secrets.TF_USER_AWS_REGION }}"
-          TF_VAR_ec2_instance_type: "${{ github.event.inputs.ec2_instance_type}}"
+          TF_VAR_ec2_name: ${{ github.event.inputs.ec2_name }}
+          TF_VAR_pem_key_name: ${{ github.event.inputs.pem_key_name }}
+          TF_VAR_aws_region: ${{ secrets.TF_USER_AWS_REGION }}
+          TF_VAR_ec2_instance_type: ${{ github.event.inputs.ec2_instance_type }}
         run: |
           cd <TERRAFORM-TEMPLATE-DIR>
           terraform init
@@ -66,7 +69,7 @@ jobs:
           terraform apply -auto-approve
 
       - name: Set Outputs
-        id: set_outputs
+        id: display_outputs
         run: |
           cd <TERRAFORM-TEMPLATE-DIR>
           echo "instance_id=$(terraform output -raw instance_id)" >> $GITHUB_ENV
@@ -93,9 +96,9 @@ jobs:
           operation: PATCH_RUN
           runId: ${{ fromJson(inputs.port_context).run_id }}
           logMessage: |
-              EC2 Instance created successfully ✅
+            EC2 Instance created successfully ✅
 
-     - name: Report Created Instance to Port
+      - name: Report Created Instance to Port
         uses: port-labs/port-github-action@v1
         with:
           clientId: ${{ secrets.PORT_CLIENT_ID }}
@@ -108,10 +111,10 @@ jobs:
       - name: UPSERT EC2 Instance Entity
         uses: port-labs/port-github-action@v1
         with:
-          identifier: "${{ steps.display_outputs.outputs.instance_id }}"
-          title: "${{ inputs.ec2_name }}"
+          identifier: ${{ env.instance_id }}
+          title: ${{ github.event.inputs.ec2_name }}
           blueprint: ${{ fromJson(inputs.port_context).blueprint }}
-          properties: |-
+          properties: |
             {
               "instance_state": "${{ env.instance_state }}",
               "instance_type": "${{ env.instance_type }}",
