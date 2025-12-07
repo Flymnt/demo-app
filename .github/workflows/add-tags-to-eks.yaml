@@ -27,15 +27,7 @@ on:
 jobs:
   tag-eks-cluster:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Debug inputs
-        run: |
-          echo "resource_tags raw=${{ inputs.resource_tags }}"
-          echo "entity_arn=${{ inputs.entity_arn }}"
-          echo "entity_title=${{ inputs.entity_title }}"
-          echo "run_id=${{ inputs.run_id }}"
-
       - name: Inform Port of workflow start
         uses: port-labs/port-github-action@v1
         with:
@@ -44,7 +36,7 @@ jobs:
           baseUrl: https://api.getport.io
           operation: PATCH_RUN
           runId: ${{ inputs.run_id }}
-          logMessage: "Configuring AWS to add tags to EKS cluster: ${{ inputs.entity_title }}"
+          logMessage: Configuring AWS credentials to add tags to EKS with domain ${{ inputs.entity_title }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -53,20 +45,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.TF_USER_AWS_SECRET }}
           aws-region: ${{ secrets.TF_USER_AWS_REGION }}
 
-      - name: Normalize & apply tags
-        id: tag
-        run: |
-          # Remove surrounding quotes from JSON-encoded string
-          TAGS=$(echo '${{ inputs.resource_tags }}' | sed 's/^"//;s/"$//')
-          
-          echo "Normalized tags: $TAGS"
+      - name: Add tags to EKS
+        run: aws eks tag-resource --resource-arn ${{ inputs.entity_arn }} --tags ${{ inputs.resource_tags }}
 
-          # Apply the tags
-          aws eks tag-resource \
-            --resource-arn "${{ inputs.entity_arn }}" \
-            --tags "$TAGS"
-
-      - name: Inform Port about success
+      - name: Inform Port about EKS tag addition success
         if: success()
         uses: port-labs/port-github-action@v1
         with:
@@ -76,10 +58,10 @@ jobs:
           operation: PATCH_RUN
           runId: ${{ inputs.run_id }}
           status: 'SUCCESS'
-          logMessage: "✅ Tags applied successfully to ${{ inputs.entity_title }}"
-          summary: "EKS tag addition completed successfully"
+          logMessage: ✅ EKS resource with name ${{ inputs.entity_title }} tagged successfully
+          summary: EKS tag addition completed successfully
 
-      - name: Inform Port about failure
+      - name: Inform Port about EKS tag addition failure
         if: failure()
         uses: port-labs/port-github-action@v1
         with:
@@ -89,5 +71,5 @@ jobs:
           operation: PATCH_RUN
           runId: ${{ inputs.run_id }}
           status: 'FAILURE'
-          logMessage: "❌ Failed to add tags to ${{ inputs.entity_title }}"
-          summary: "EKS tag addition failed"
+          logMessage: ❌ Failed to add tags to EKS with name ${{ inputs.entity_title }}
+          summary: EKS tag addition failed
