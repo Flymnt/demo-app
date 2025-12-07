@@ -7,9 +7,21 @@ on:
         required: true
         description: 'Metadata that assists with categorization and organization.'
         type: string
-      port_context:
+      entity_identifier:
         required: true
-        description: 'Action and general context (blueprint, entity, run id, etc...)'
+        description: 'Entity identifier'
+        type: string
+      entity_arn:
+        required: true
+        description: 'EKS resource ARN'
+        type: string
+      entity_title:
+        required: true
+        description: 'Entity title'
+        type: string
+      run_id:
+        required: true
+        description: 'Port run ID'
         type: string
 
 jobs:
@@ -23,8 +35,8 @@ jobs:
           clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
           baseUrl: https://api.getport.io
           operation: PATCH_RUN
-          runId: ${{fromJson(inputs.port_context).runId}}
-          logMessage: Configuring AWS credentials to add tags to EKS with domain ${{ fromJson(inputs.port_context).entity.title }}
+          runId: ${{ inputs.run_id }}
+          logMessage: Configuring AWS credentials to add tags to EKS with domain ${{ inputs.entity_title }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -34,7 +46,7 @@ jobs:
           aws-region: ${{ secrets.TF_USER_AWS_REGION }}
 
       - name: Add tags to EKS
-        run: aws eks tag-resource --resource-arn ${{ fromJson(inputs.port_context).entity.properties.arn }} --tags ${{ inputs.resource_tags }}
+        run: aws eks tag-resource --resource-arn ${{ inputs.entity_arn }} --tags ${{ inputs.resource_tags }}
 
       - name: Inform Port about EKS tag addition success
         if: success()
@@ -44,9 +56,9 @@ jobs:
           clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
           baseUrl: https://api.getport.io
           operation: PATCH_RUN
-          runId: ${{ fromJson(inputs.port_context).runId }}
+          runId: ${{ inputs.run_id }}
           status: 'SUCCESS'
-          logMessage: ✅ EKS resource with name ${{ fromJson(inputs.port_context).entity.title }} tagged successfully
+          logMessage: ✅ EKS resource with name ${{ inputs.entity_title }} tagged successfully
           summary: EKS tag addition completed successfully
 
       - name: Inform Port about EKS tag addition failure
@@ -57,7 +69,7 @@ jobs:
           clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
           baseUrl: https://api.getport.io
           operation: PATCH_RUN
-          runId: ${{ fromJson(inputs.port_context).runId }}
+          runId: ${{ inputs.run_id }}
           status: 'FAILURE'
-          logMessage: ❌ Failed to add tags to EKS with name ${{ fromJson(inputs.port_context).entity.title }}
+          logMessage: ❌ Failed to add tags to EKS with name ${{ inputs.entity_title }}
           summary: EKS tag addition failed
